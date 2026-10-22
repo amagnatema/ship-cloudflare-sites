@@ -1,0 +1,5 @@
+interface:
+  display_name: "Cloudflare 网站发布"
+  short_description: "审计并交付含 D1、R2、域名、渐进发布与恢复的 Cloudflare 网站"
+  default_prompt: "使用 $ship-cloudflare-sites 审计当前项目，修复发布阻断项，并按风险选择直接或渐进式 Cloudflare 发布。"
+

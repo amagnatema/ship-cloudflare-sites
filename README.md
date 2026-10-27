@@ -2,7 +2,7 @@
 
 A reusable Codex skill for developing, auditing, provisioning, releasing, verifying, and recovering websites on Cloudflare Workers.
 
-It covers Next.js/OpenNext, Wrangler, D1 migrations, R2 object storage, secrets, custom domains, caching, observability, direct deployments, gradual deployments, and rollback planning.
+It covers Next.js/OpenNext, vinext/Cloudflare Vite, Wrangler, D1 migrations, R2 object storage, secrets, custom domains, caching, observability, direct deployments, gradual deployments, and rollback planning.
 
 ## Install with Codex
 
@@ -17,7 +17,7 @@ To install a fixed release:
 
 ```text
 Use $skill-installer to install the skill from:
-https://github.com/amagnatema/ship-cloudflare-sites/tree/v1.1.0/skills/ship-cloudflare-sites
+https://github.com/amagnatema/ship-cloudflare-sites/tree/v1.2.0/skills/ship-cloudflare-sites
 ```
 
 The equivalent installer arguments are:
@@ -25,7 +25,7 @@ The equivalent installer arguments are:
 ```text
 --repo amagnatema/ship-cloudflare-sites
 --path skills/ship-cloudflare-sites
---ref v1.1.0
+--ref v1.2.0
 ```
 
 The skill becomes available to Codex on the next turn after installation.
@@ -50,7 +50,8 @@ skills/ship-cloudflare-sites/
 │   ├── cloudflare-resources.md
 │   └── release-workflow.md
 └── scripts/
-    └── audit-cloudflare-project.sh
+    ├── audit-cloudflare-project.sh
+    └── inspect-migrations.py
 ```
 
 Run the read-only project audit directly:

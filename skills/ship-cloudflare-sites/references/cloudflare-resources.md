@@ -23,6 +23,8 @@ Run `npx wrangler whoami` before provisioning or production operations. Confirm 
 
 Use the command runner that resolves the repository-pinned binary (`npx --no-install`, `yarn`, `pnpm exec`, or the repository equivalent). Do not let `npx` download an unpinned Wrangler during a release.
 
+If Cloudflare Access protects an admin, enforce the policy for every reachable hostname and protected path. Validate the signed JWT against the team's rotating public keys and the intended issuer and audience, expiry and authorized identity; do not trust an email header or an arbitrary nonempty JWT. Test invalid, expired and forged assertions. If Access configuration or permissions are unavailable, keep admin endpoints fail-closed and explain the limitation; only proceed with a public-only release if the user accepts it. Avoid printing tokens or request headers. See [Cloudflare Access JWT validation](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/).
+
 ## D1 lifecycle
 
 Create once, then capture the returned database ID:

@@ -2,14 +2,16 @@
 set -euo pipefail
 
 project_root="${1:-.}"
-script_version="1.1"
+script_version="1.2"
 
 if [[ ! -d "$project_root" ]]; then
   echo "error: project root is not a directory: $project_root" >&2
   exit 2
 fi
 
+script_dir="$(cd "$(dirname "$0")" && pwd)"
 cd "$project_root"
+project_root="$(pwd)"
 
 section() {
   printf '\n## %s\n' "$1"
@@ -52,12 +54,12 @@ if [[ -f package.json ]] && command -v node >/dev/null 2>&1; then
     console.log(`package_name: ${p.name ?? "<unset>"}`);
     console.log(`package_version: ${p.version ?? "<unset>"}`);
     const all = {...p.dependencies, ...p.devDependencies};
-    for (const name of ["next", "@opennextjs/cloudflare", "wrangler", "react", "astro", "vite", "@cloudflare/vite-plugin"]) {
+    for (const name of ["next", "@opennextjs/cloudflare", "wrangler", "react", "astro", "vinext", "vite", "@cloudflare/vite-plugin"]) {
       if (all[name]) console.log(`dependency: ${name}@${all[name]}`);
     }
     for (const [name, value] of Object.entries(p.scripts ?? {})) {
       if (/(dev|build|preview|deploy|cloudflare|wrangler|type|lint|test|migration|d1|r2|release)/i.test(name + " " + value)) {
-        console.log(`script: ${name} = ${value}`);
+        console.log(`script: ${name} (contents not printed)`);
       }
     }
   '
@@ -85,9 +87,10 @@ fi
 
 section "Bindings, routes, and deployment signals"
 if command -v rg >/dev/null 2>&1; then
-  rg -n --hidden \
+  rg -l --hidden \
     -g '!node_modules/**' -g '!.git/**' -g '!.next/**' -g '!.open-next/**' \
     -g '!dist/**' -g '!build/**' -g '!coverage/**' -g '!cloudflare-env.d.ts' \
+    -g '!**/.env*' -g '!**/.dev.vars*' -g '!**/*secret*' -g '!**/*credential*' \
     '(d1_databases|r2_buckets|custom_domain|routes|workers_dev|preview_urls|compatibility_date|compatibility_flags|observability|ASSET_PUBLIC_BASE_URL|getCloudflareContext|wrangler|opennextjs-cloudflare)' \
     . 2>/dev/null | head -n 240 || true
 else
@@ -95,16 +98,13 @@ else
 fi
 
 section "Schema and migrations"
-migration_file_count=0
-if command -v rg >/dev/null 2>&1; then
-  rg --files -g '!node_modules/**' -g '!.git/**' -g '!.next/**' \
-    | rg '(^|/)(migrations?|schema|db|database)(/|\.|$)|\.sql$' \
-    | head -n 160 || true
-  migration_file_count="$(rg --files -g '!node_modules/**' -g '!.git/**' -g '!.next/**' \
-    | (rg '(^|/)migrations?/.*\.sql$' || true) | wc -l | tr -d ' ')"
+migration_state="unknown"
+if command -v python3 >/dev/null 2>&1; then
+  migration_state="$(python3 "$script_dir/inspect-migrations.py" "$project_root")"
 else
-  find . -type f \( -name '*.sql' -o -path '*/migrations/*' \) -print | head -n 160
+  printf 'migration inspection unavailable (python3 required)\n'
 fi
+printf 'migration_inspection: %s\n' "$migration_state"
 
 section "CI and release files"
 ci_file_count=0
@@ -145,8 +145,11 @@ if [[ "$dirty_worktree" -eq 1 ]]; then
   warning_count=$((warning_count + 1))
 fi
 
-if [[ "$migration_file_count" -eq 0 ]]; then
-  printf 'WARNING: no ordered SQL migrations detected\n'
+if [[ "$migration_state" == "d1-no-migrations" ]]; then
+  printf 'WARNING: D1 configured but no SQL migration files found in configured directories\n'
+  warning_count=$((warning_count + 1))
+elif [[ "$migration_state" == "unknown" ]]; then
+  printf 'WARNING: migration state unknown; inspect Wrangler config and migration directories manually\n'
   warning_count=$((warning_count + 1))
 fi
 
